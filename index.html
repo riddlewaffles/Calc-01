@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>[ ITEM TRACKER ]</h1>
+
+        <!-- add -->
+        <form id="item-form" class="form-container">
+            <input type="text" id="item-name" placeholder="Item Name" required>
+            <input type="number" id="item-price" placeholder="Price ($)" step="0.01" min="0" required>
+            <input type="number" id="item-duration" placeholder="Duration (Days)" min="1" required>
+            <button type="submit">ADD ITEM</button>
+        </form>
+
+        <!-- summary -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>TOTAL LIST VALUE</h3>
+                <p id="total-value">$0.00</p>
+            </div>
+            <div class="summary-card">
+                <h3>ACTIVE WEEKLY COST</h3>
+                <p id="weekly-cost">$0.00</p>
+            </div>
+            <div class="summary-card">
+                <h3>ACTIVE MONTHLY COST</h3>
+                <p id="monthly-cost">$0.00</p>
+            </div>
+        </div>
+
+        <!-- table -->
+        <table class="item-table">
+            <thead>
+                <tr>
+                    <th>STATUS</th>
+                    <th>ITEM</th>
+                    <th>PRICE</th>
+                    <th>DURATION</th>
+                    <th>TIMER REMAINING</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody id="item-list">
+            </tbody>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
