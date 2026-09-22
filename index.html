@@ -3,54 +3,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Item Tracker</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Subscription & Renewal Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        termDark: '#0a0d12',
+                        termCard: '#121721',
+                        termBorder: '#1f293d',
+                        termAccent: '#00ff66',
+                        termAccentDim: 'rgba(0,255,102,0.15)',
+                        termWarning: '#ffb700'
+                    },
+                    fontFamily: {
+                        mono: ['Courier New', 'Courier', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0d12;
+            color: #e2e8f0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0d12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f293d;
+            border-radius: 3px;
+        }
+        .term-box-glow {
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.05);
+        }
+        .term-btn-active:active {
+            transform: translateY(1px);
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>[ ITEM TRACKER ]</h1>
+<body class="min-h-screen p-3 sm:p-6 flex flex-col justify-between">
 
-        <!-- add -->
-        <form id="item-form" class="form-container">
-            <input type="text" id="item-name" placeholder="Item Name" required>
-            <input type="number" id="item-price" placeholder="Price ($)" step="0.01" min="0" required>
-            <input type="number" id="item-duration" placeholder="Duration (Days)" min="1" required>
-            <button type="submit">ADD ITEM</button>
-        </form>
+    <div class="max-w-4xl mx-auto w-full space-y-6">
+        <!-- Header Section -->
+        <header class="border-b border-termBorder pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-termAccent flex items-center gap-2">
+                    <span class="inline-block w-3 h-3 bg-termAccent rounded-full animate-pulse"></span>
+                    SUBSCRIPTION // RENEWAL TRACKER
+                </h1>
+                <p class="text-xs text-gray-400 mt-1">&gt; Track cycles, timers, and normalized expenses</p>
+            </div>
+            <div class="text-xs text-gray-500 font-mono self-end sm:self-center">
+                STATUS: <span class="text-termAccent">ACTIVE</span>
+            </div>
+        </header>
 
-        <!-- summary -->
-        <div class="summary-grid">
-            <div class="summary-card">
-                <h3>TOTAL LIST VALUE</h3>
-                <p id="total-value">$0.00</p>
+        <!-- Financial Summary Dashboard (3 Distinct Sections) -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4" aria-label="Financial Summary">
+            <!-- Total Value Card -->
+            <div class="bg-termCard border border-termBorder rounded-lg p-4 term-box-glow">
+                <div class="text-xs text-gray-400 font-bold tracking-wider uppercase mb-1">// Total List Value</div>
+                <div id="summary-total" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">$0.00</div>
+                <div class="text-[10px] text-gray-500 mt-1">Sum of all item prices</div>
             </div>
-            <div class="summary-card">
-                <h3>ACTIVE WEEKLY COST</h3>
-                <p id="weekly-cost">$0.00</p>
-            </div>
-            <div class="summary-card">
-                <h3>ACTIVE MONTHLY COST</h3>
-                <p id="monthly-cost">$0.00</p>
-            </div>
-        </div>
 
-        <!-- table -->
-        <table class="item-table">
-            <thead>
-                <tr>
-                    <th>STATUS</th>
-                    <th>ITEM</th>
-                    <th>PRICE</th>
-                    <th>DURATION</th>
-                    <th>TIMER REMAINING</th>
-                    <th>ACTION</th>
-                </tr>
-            </thead>
-            <tbody id="item-list">
-            </tbody>
-        </table>
+            <!-- Weekly Recurring Card -->
+            <div class="bg-termCard border border-termBorder rounded-lg p-4 term-box-glow">
+                <div class="text-xs text-termAccent font-bold tracking-wider uppercase mb-1">// Weekly Expense</div>
+                <div id="summary-weekly" class="text-2xl sm:text-3xl font-extrabold text-termAccent tracking-tight">$0.00</div>
+                <div class="text-[10px] text-gray-500 mt-1">Normalized per 7-day period</div>
+            </div>
+
+            <!-- Monthly Recurring Card -->
+            <div class="bg-termCard border border-termBorder rounded-lg p-4 term-box-glow">
+                <div class="text-xs text-termWarning font-bold tracking-wider uppercase mb-1">// Monthly Expense</div>
+                <div id="summary-monthly" class="text-2xl sm:text-3xl font-extrabold text-termWarning tracking-tight">$0.00</div>
+                <div class="text-[10px] text-gray-500 mt-1">Normalized per 30.44 days</div>
+            </div>
+        </section>
+
+        <!-- Add Item Form -->
+        <section class="bg-termCard border border-termBorder rounded-lg p-4 sm:p-5">
+            <h2 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span>[ + ]</span> Add New Subscription / Item
+            </h2>
+            <form id="add-item-form" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <!-- Item Name -->
+                <div class="sm:col-span-4">
+                    <label for="item-name" class="block text-xs text-gray-400 mb-1">Item Name</label>
+                    <input type="text" id="item-name" required placeholder="e.g., VPS Server, Gym" 
+                        class="w-full bg-termDark border border-termBorder rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-termAccent transition">
+                </div>
+
+                <!-- Price -->
+                <div class="sm:col-span-3">
+                    <label for="item-price" class="block text-xs text-gray-400 mb-1">Price ($)</label>
+                    <input type="number" id="item-price" step="0.01" min="0" required placeholder="14.99" 
+                        class="w-full bg-termDark border border-termBorder rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-termAccent transition">
+                </div>
+
+                <!-- Duration Value & Unit -->
+                <div class="sm:col-span-3 grid grid-cols-2 gap-1">
+                    <div>
+                        <label for="item-duration" class="block text-xs text-gray-400 mb-1">Duration</label>
+                        <input type="number" id="item-duration" min="1" value="1" required 
+                            class="w-full bg-termDark border border-termBorder rounded px-2 py-2 text-sm text-white focus:outline-none focus:border-termAccent transition text-center">
+                    </div>
+                    <div>
+                        <label for="item-unit" class="block text-xs text-gray-400 mb-1">Unit</label>
+                        <select id="item-unit" class="w-full bg-termDark border border-termBorder rounded px-1 py-2 text-xs text-white focus:outline-none focus:border-termAccent transition">
+                            <option value="hours">Hours</option>
+                            <option value="days">Days</option>
+                            <option value="weeks">Weeks</option>
+                            <option value="months" selected>Months</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="sm:col-span-2 flex items-end">
+                    <button type="submit" class="w-full bg-termAccent/20 hover:bg-termAccent/30 text-termAccent border border-termAccent/40 font-bold py-2 px-3 rounded text-sm transition term-btn-active">
+                        + ADD
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Items List Section -->
+        <section class="space-y-3">
+            <div class="flex justify-between items-center px-1">
+                <h2 class="text-sm font-bold text-gray-300 uppercase tracking-wider">// Active Subscriptions</h2>
+                <span id="item-count" class="text-xs text-gray-500">0 Items</span>
+            </div>
+
+            <!-- List Container -->
+            <div id="items-container" class="space-y-2">
+                <!-- Items populated by JS -->
+            </div>
+        </section>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Footer -->
+    <footer class="max-w-4xl mx-auto w-full mt-8 pt-4 border-t border-termBorder text-center text-xs text-gray-600">
+        Subscription & Renewal Tracker &bull; Local Storage Persistent &bull; Mobile Ready
+    </footer>
+
+    <script>
+        // Data State and Storage Key
+        const STORAGE_KEY = 'term_subscriptions_v1';
+        let items = [];
+
+        // DOM Elements
+        const addItemForm = document.getElementById('add-item-form');
+        const itemsContainer = document.getElementById('items-container');
+        const summaryTotal = document.getElementById('summary-total');
+        const summaryWeekly = document.getElementById('summary-weekly');
+        const summaryMonthly = document.getElementById('summary-monthly');
+        const itemCount = document.getElementById('item-count');
+
+        // Convert unit durations into total seconds
+        function getDurationInSeconds(value, unit) {
+            const val = parseFloat(value);
+            switch (unit) {
+                case 'hours': return val * 3600;
+                case 'days': return val * 86400;
+                case 'weeks': return val * 604800;
+                case 'months': return val * 2630016; // Average month in seconds (30.4375 days)
+                default: return val * 86400;
+            }
+        }
+
+        // Convert duration to total weeks for weekly calculation
+        function getDurationInWeeks(value, unit) {
+            const val = parseFloat(value);
+            switch (unit) {
+                case 'hours': return (val * 3600) / 604800;
+                case 'days': return val / 7;
+                case 'weeks': return val;
+                case 'months': return val * 4.34821; // 30.4375 / 7
+                default: return val / 7;
+            }
+        }
+
+        // Format duration for display
+        function formatDurationLabel(value, unit) {
+            const u = value === 1 ? unit.slice(0, -1) : unit;
+            return `${value} ${u}`;
+        }
+
+        // Format seconds into digital timer display (D d HH:MM:SS)
+        function formatCountdown(seconds) {
+            if (seconds <= 0) return "00:00:00";
+            
+            const days = Math.floor(seconds / 86400);
+            const hrs = Math.floor((seconds % 86400) / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+
+            const pad = (n) => String(n).padStart(2, '0');
+
+            if (days > 0) {
+                return `${days}d ${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+            }
+            return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+        }
+
+        // Format currency
+        function formatCurrency(num) {
+            return '$' + (Number(num) || 0).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function loadItems() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    items = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error("Error loading items from localStorage", e);
+                items = [];
+            }
+        }
+
+        function saveItems() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            } catch (e) {
+                console.error("Error saving items to localStorage", e);
+            }
+        }
+
+        function updateFinancialSummaries() {
+            let totalVal = 0;
+            let totalWeekly = 0;
+            let totalMonthly = 0;
+
+            items.forEach(item => {
+                const price = parseFloat(item.price) || 0;
+                totalVal += price;
+
+                const durationWeeks = getDurationInWeeks(item.durationValue, item.durationUnit);
+                if (durationWeeks > 0) {
+                    const weeklyCost = price / durationWeeks;
+                    totalWeekly += weeklyCost;
+                    totalMonthly += weeklyCost * 4.34821; // Average weeks per month
+                }
+            });
+
+            summaryTotal.textContent = formatCurrency(totalVal);
+            summaryWeekly.textContent = formatCurrency(totalWeekly);
+            summaryMonthly.textContent = formatCurrency(totalMonthly);
+            itemCount.textContent = `${items.length} ${items.length === 1 ? 'Item' : 'Items'}`;
+        }
+
+        function renderItems() {
+            itemsContainer.innerHTML = '';
+
+            if (items.length === 0) {
+                itemsContainer.innerHTML = `
+                    <div class="text-center py-8 border border-dashed border-termBorder rounded-lg text-gray-500 text-xs">
+                        No subscriptions found. Use the form above to add your first item.
+                    </div>
+                `;
+                updateFinancialSummaries();
+                return;
+            }
+
+            const now = Date.now();
+
+            items.forEach((item) => {
+                // Determine timer state
+                let isActive = item.isChecked;
+                let remainingSecs = 0;
+
+                if (isActive && item.startTime) {
+                    const totalDurationSecs = getDurationInSeconds(item.durationValue, item.durationUnit);
+                    const elapsedSecs = Math.floor((now - item.startTime) / 1000);
+                    remainingSecs = totalDurationSecs - elapsedSecs;
+
+                    // Timer complete condition -> auto reset
+                    if (remainingSecs <= 0) {
+                        item.isChecked = false;
+                        item.startTime = null;
+                        isActive = false;
+                        remainingSecs = 0;
+                        saveItems();
+                    }
+                }
+
+                const cardHtml = document.createElement('div');
+                cardHtml.className = `bg-termCard border ${isActive ? 'border-termAccent/50' : 'border-termBorder'} rounded-lg p-3 sm:p-4 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`;
+                cardHtml.dataset.id = item.id;
+
+                cardHtml.innerHTML = `
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <!-- Custom Checkbox / Activation Switch -->
+                        <button onclick="toggleItemCheck('${item.id}')" 
+                            class="flex-shrink-0 w-8 h-8 rounded border ${isActive ? 'bg-termAccent text-black border-termAccent' : 'bg-termDark border-termBorder text-transparent'} flex items-center justify-center transition font-bold text-sm">
+                            ✓
+                        </button>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-sm text-white truncate">${escapeHtml(item.name)}</h3>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded border border-termBorder text-gray-400 bg-termDark">
+                                    ${formatDurationLabel(item.durationValue, item.durationUnit)}
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-0.5">
+                                <span class="text-white font-semibold">${formatCurrency(item.price)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Controls: Timer Display & Actions -->
+                    <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 border-termBorder pt-2 sm:pt-0">
+                        <!-- Countdown Timer Box -->
+                        <div class="text-left sm:text-right">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-wider">
+                                ${isActive ? 'Time Remaining' : 'Status'}
+                            </div>
+                            <div class="font-mono text-xs sm:text-sm font-bold ${isActive ? 'text-termAccent' : 'text-gray-500'}" id="timer-${item.id}">
+                                ${isActive ? formatCountdown(remainingSecs) : '[ INACTIVE ]'}
+                            </div>
+                        </div>
+
+                        <!-- Delete Button -->
+                        <button onclick="deleteItem('${item.id}')" title="Delete Item"
+                            class="p-2 text-xs text-gray-500 hover:text-red-400 hover:bg-red-400/10 border border-transparent hover:border-red-400/30 rounded transition">
+                            ✕
+                        </button>
+                    </div>
+                `;
+
+                itemsContainer.appendChild(cardHtml);
+            });
+
+            updateFinancialSummaries();
+        }
+
+        // Helper to prevent HTML injection in titles
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+
+        // Add Item Form Submit
+        addItemForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('item-name').value.trim();
+            const price = parseFloat(document.getElementById('item-price').value);
+            const durationValue = parseInt(document.getElementById('item-duration').value, 10);
+            const durationUnit = document.getElementById('item-unit').value;
+
+            if (!name || isNaN(price) || isNaN(durationValue)) return;
+
+            const newItem = {
+                id: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                name,
+                price,
+                durationValue,
+                durationUnit,
+                isChecked: false,
+                startTime: null
+            };
+
+            items.push(newItem);
+            saveItems();
+            renderItems();
+
+            // Reset form input values
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-price').value = '';
+            document.getElementById('item-duration').value = '1';
+            document.getElementById('item-unit').value = 'months';
+        });
+
+        // Toggle Checkbox / Start or Stop Timer
+        window.toggleItemCheck = function(id) {
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+
+            if (!item.isChecked) {
+                // Activate timer
+                item.isChecked = true;
+                item.startTime = Date.now();
+            } else {
+                // Manual Deactivate
+                item.isChecked = false;
+                item.startTime = null;
+            }
+
+            saveItems();
+            renderItems();
+        };
+
+        // Delete Item
+        window.deleteItem = function(id) {
+            items = items.filter(i => i.id !== id);
+            saveItems();
+            renderItems();
+        };
+
+        function startGlobalTimerLoop() {
+            setInterval(() => {
+                if (items.length === 0) return;
+
+                const now = Date.now();
+                let stateChanged = false;
+
+                items.forEach(item => {
+                    if (item.isChecked && item.startTime) {
+                        const totalSecs = getDurationInSeconds(item.durationValue, item.durationUnit);
+                        const elapsedSecs = Math.floor((now - item.startTime) / 1000);
+                        const remainingSecs = totalSecs - elapsedSecs;
+
+                        const timerElement = document.getElementById(`timer-${item.id}`);
+
+                        if (remainingSecs <= 0) {
+                            // Timer finished -> Uncheck & trigger state refresh
+                            item.isChecked = false;
+                            item.startTime = null;
+                            stateChanged = true;
+                        } else if (timerElement) {
+                            // Live tick updates in DOM without full re-render
+                            timerElement.textContent = formatCountdown(remainingSecs);
+                        }
+                    }
+                });
+
+                if (stateChanged) {
+                    saveItems();
+                    renderItems();
+                }
+            }, 1000);
+        }
+
+        // Initialization on Load
+        window.onload = function() {
+            loadItems();
+            renderItems();
+            startGlobalTimerLoop();
+        };
+    </script>
 </body>
 </html>
